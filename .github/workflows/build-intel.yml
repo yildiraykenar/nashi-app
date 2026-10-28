@@ -26,7 +26,15 @@ jobs:
 
       - name: Build Intel application
         run: zsh scripts/build-app.sh release
+    
+      - name: Fix resource bundle for Intel Mac
+        run: |
+          ditto \
+            build/Nashi.app/Contents/Resources/Nashi_NashiCore.bundle \
+            build/Nashi.app/Nashi_NashiCore.bundle
 
+          codesign --force --sign - build/Nashi.app
+          codesign --verify --deep --strict build/Nashi.app
       - name: Verify architecture
         run: |
           file build/Nashi.app/Contents/MacOS/Nashi
