@@ -31,7 +31,7 @@ jobs:
         run: |
           file build/Nashi.app/Contents/MacOS/Nashi
           lipo -archs build/Nashi.app/Contents/MacOS/Nashi
-          lipo -verify_arch x86_64 build/Nashi.app/Contents/MacOS/Nashi
+          lipo build/Nashi.app/Contents/MacOS/Nashi -verify_arch x86_64
 
       - name: Create ZIP
         run: |
