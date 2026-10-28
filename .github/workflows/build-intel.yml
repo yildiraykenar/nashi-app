@@ -1,0 +1,45 @@
+name: Build Nashi for Intel Mac
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-intel:
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Check environment
+        run: |
+          uname -m
+          sw_vers
+          swift --version
+
+      - name: Install ExifTool
+        run: zsh scripts/setup-exiftool.sh
+
+      - name: Build Intel application
+        run: zsh scripts/build-app.sh release
+
+      - name: Verify architecture
+        run: |
+          file build/Nashi.app/Contents/MacOS/Nashi
+          lipo -archs build/Nashi.app/Contents/MacOS/Nashi
+          lipo -verify_arch x86_64 build/Nashi.app/Contents/MacOS/Nashi
+
+      - name: Create ZIP
+        run: |
+          ditto -c -k --keepParent build/Nashi.app Nashi-macOS-Intel.zip
+
+      - name: Upload Intel build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nashi-macOS-Intel
+          path: Nashi-macOS-Intel.zip
+          retention-days: 7
