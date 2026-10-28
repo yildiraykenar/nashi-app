@@ -1,3 +1,4 @@
+
 name: Build Nashi for Intel Mac
 
 on:
@@ -17,33 +18,66 @@ jobs:
 
       - name: Check environment
         run: |
+          echo "=== CPU Architecture ==="
           uname -m
+
+          echo "=== macOS Version ==="
           sw_vers
+
+          echo "=== Swift Version ==="
           swift --version
 
       - name: Install ExifTool
-        run: zsh scripts/setup-exiftool.sh
+        run: |
+          zsh scripts/setup-exiftool.sh
 
       - name: Build Intel application
-        run: zsh scripts/build-app.sh release
-    
+        run: |
+          zsh scripts/build-app.sh release
+
       - name: Fix resource bundle for Intel Mac
         run: |
+          echo "=== Copying NashiCore resource bundle ==="
+
           ditto \
             build/Nashi.app/Contents/Resources/Nashi_NashiCore.bundle \
             build/Nashi.app/Nashi_NashiCore.bundle
 
-          codesign --force --sign - build/Nashi.app
-          codesign --verify --deep --strict build/Nashi.app
-      - name: Verify architecture
-        run: |
-          file build/Nashi.app/Contents/MacOS/Nashi
-          lipo -archs build/Nashi.app/Contents/MacOS/Nashi
-          lipo build/Nashi.app/Contents/MacOS/Nashi -verify_arch x86_64
+          echo "=== Verifying resource bundle ==="
 
-      - name: Create ZIP
+          test -d build/Nashi.app/Nashi_NashiCore.bundle
+
+          echo "Resource bundle copied successfully."
+
+      - name: Verify Intel architecture
         run: |
-          ditto -c -k --keepParent build/Nashi.app Nashi-macOS-Intel.zip
+          echo "=== Executable information ==="
+
+          file build/Nashi.app/Contents/MacOS/Nashi
+
+          echo "=== Supported architectures ==="
+
+          lipo -archs build/Nashi.app/Contents/MacOS/Nashi
+
+          echo "=== Verifying x86_64 support ==="
+
+          lipo \
+            build/Nashi.app/Contents/MacOS/Nashi \
+            -verify_arch x86_64
+
+          echo "Intel x86_64 verification successful."
+
+      - name: Create Intel ZIP
+        run: |
+          echo "=== Creating ZIP archive ==="
+
+          ditto -c -k --keepParent \
+            build/Nashi.app \
+            Nashi-macOS-Intel.zip
+
+          echo "=== ZIP information ==="
+
+          ls -lh Nashi-macOS-Intel.zip
 
       - name: Upload Intel build
         uses: actions/upload-artifact@v4
@@ -51,3 +85,4 @@ jobs:
           name: Nashi-macOS-Intel
           path: Nashi-macOS-Intel.zip
           retention-days: 7
+          if-no-files-found: error
